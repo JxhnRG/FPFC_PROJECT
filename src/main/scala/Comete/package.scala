@@ -19,7 +19,7 @@ package object Comete {
     else {
       //Divide el intervalo en 10 partes
       val div = (max - min) / 10
-      //Se genera los puntos en las divisiones
+      //Se genera los puntos de las divisiones
       val intervals = for {
         i <- 0 to 10
       } yield min + i * div
@@ -27,46 +27,57 @@ package object Comete {
       val values = intervals.map ( x => f(x))
       //Se ncuentra el punto donde la función tiene el menor valor
       val valueMin = intervals(values.indexOf(values.min))
-      // Calcula los nuevos límites del intervalo
+      //Se calculan los nuevos límites del intervalo
       val newMin = if (valueMin - div < min) min else valueMin - div
       val newMax = if (valueMin + div > max) max else valueMin + div
-      //La función se llama recursivamente con el nuevo intervalo
-      min_p(f, newMin, newMax,prec)
-      }
-    }
-  // Creamos la función que nos va a devolver la medida de polarización
-  def rhoCMT_Gen(alpha: Double, beta: Double): PolMeasure = {
-    // Función que recibe una distribución
-    (distribution: Distribution) => {
-      // Creamos una tuple que sea una distribución
-      val (frequencies, values) = distribution
-      //Creamos una función Auxiliar que reciba un Double y devuelva la medida de polarización
-      def rhoaux(p:Double):Double = {
-        // Creamos tuples (pi,yi) y luego les cambiamos el valor por la formula que calcula la polarizacion
-        frequencies.zip(values).map{case (pi,yi) =>  Math.pow(pi, alpha) * Math.pow(Math.abs(yi - p), beta)}.sum
-      }
-      // Definimos f como una función que recibe un p y es igual rhoaux
-      val f = (p:Double) => rhoaux(p)
-      // Definimos el valor mínimo de de la funcion rhoaux usando la funcion de min_p
-      val min = min_p(f, 0.0, 1.0, 0.001)
-      // Si f(min) es menor que 0.001 nos devuelve 0,0
-      if (f(min) < 1e-2) 0.0
-      // Si no Devuelve rhoaux(min) aproximado con tres decimales
-      else BigDecimal(rhoaux(min)).setScale(3, BigDecimal.RoundingMode.HALF_UP).toDouble
+      //La función se llama recursivamente con los nuevos intervalos
+      min_p(f, newMin, newMax, prec)
     }
   }
+
+  def rhoCMT_Gen(alpha: Double, beta: Double): PolMeasure = {
+    (distribution: Distribution) => {
+      val (pi, y) = distribution
+      val k = pi.length
+
+      def paux(p: Double): Double = {
+        (for {
+          i <- 0 until k
+        } yield math.pow(pi(i), alpha) * math.pow(math.abs(y(i) - p), beta)).sum
+      }
+
+      val f: Double => Double = (p: Double) => paux(p)
+      val min = min_p(f, 0.0, 1.0, 0.0001)
+      //Se redondean los resultados a 3 decimales
+      math.round(paux(min) * 1000) / 1000.0
+    }
+  }
+
   def normalizar(m: PolMeasure): PolMeasure = {
-    //Se definen la fecuencias y valores del peor caso
-    val peorCaso: Distribution = (
-      Vector(0.5, 0.0, 0.0, 0.0, 0.5), // Frecuencias del peor caso con 0.5 en extremos
-      Vector(0.0, 0.25, 0.5, 0.75, 1.0) // Valores distribucion de likert5
-    )
-
-    //Se clacula la polarización del peor caso
-    val polarizacionPeorCaso = m(peorCaso)
-
+    //Se definen la fecuencias y valores del peor caso dinamicamente
+    def frecuencia(n: Int ): Frequency = {
+      (0 until n).map(i => if (i == 0 || i == n - 1) 0.5 else 0.0).toVector
+    }
+    def valores(n: Int): DistributionValues = {
+      (0 until n).map(i => if (i == n - 1)  1.0 else 0.0).toVector
+    }
     //Se define un funcion anonima que calcula la polarización de la
     // distribución que se pase  como argumento y la dive por la del peor caso
-    (x: Distribution) => BigDecimal(m(x) / polarizacionPeorCaso).setScale(3, BigDecimal.RoundingMode.HALF_UP).toDouble
+    (x: Distribution) => {
+      //Se busca el tamaño del primer elemento de la tupla Distribuction
+      // que corresponde al vector de las frecuencias y como lo ideal es que el vector de los valores
+      // de la distribucion tenga el mimso tamaño tomaremos solamente ese valor para n
+      val n = x._1.length
+      val frecuencias = frecuencia(n)
+      val valoresDistribucion = valores(n)
+
+      // Crear la distribución del peor caso
+      val peorCaso: Distribution = (frecuencias, valoresDistribucion)
+
+      //Se clacula la polarización del peor caso
+      val polarizacionPeorCaso = m(peorCaso)
+      //Se redondean los resultados a 3 decimales
+      math.round((m(x) / polarizacionPeorCaso) * 1000) / 1000.0
     }
+  }
 }
