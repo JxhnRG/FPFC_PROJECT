@@ -135,7 +135,6 @@ for {
   b <- simulate(confBiasUpdate, i1_10, sbm_10, 2)
 } yield (b, rho1(b, dist1))
 
-val likert5 = Vector(0.0, 0.25, 0.5, 0.75, 1.0)
 val sbms = for {
   n <- 2 until 16
   nags = math.pow(2, n).toInt
