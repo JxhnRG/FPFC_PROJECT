@@ -120,12 +120,10 @@ rho1(sbm_10, dist1)
 rho1(confBiasUpdate(sbm_10, i1_10), dist1)
 
 //Pruebas Paralelas
-val sbu_10 = uniformBelief(10)
 confBiasUpdatePar(sbu_10, i1_10)
 rho1(sbu_10, dist1)
 rho1(confBiasUpdatePar(sbu_10, i1_10), dist1)
 
-val sbm_10 = midlyBelief(10)
 confBiasUpdatePar(sbm_10, i1_10)
 rho1(sbm_10, dist1)
 rho1(confBiasUpdatePar(sbm_10, i1_10), dist1)
