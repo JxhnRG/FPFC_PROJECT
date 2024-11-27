@@ -51,8 +51,12 @@ val sb_midly = midlyBelief(100)
 
 val rho1 = rho(1.2, 1.2)
 val rho2 = rho(2.0, 1.0)
+val rhoPar1 = rhoPar(1.2,1.2)
+val rhoPar2 = rhoPar(2.0,1.0)
 val dist1 = Vector(0.0, 0.25, 0.50, 0.75, 1.0)
 val dist2 = Vector(0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
+
+//Pruebas secuenciales
 rho1(sb_ext, dist1)
 rho2(sb_ext, dist1)
 rho1(sb_ext, dist2)
@@ -74,6 +78,28 @@ rho2(sb_midly, dist1)
 rho1(sb_midly, dist2)
 rho2(sb_midly, dist2)
 
+//Pruebas paralelas
+rhoPar1(sb_ext, dist1)
+rhoPar2(sb_ext, dist1)
+rhoPar1(sb_ext, dist2)
+rhoPar2(sb_ext, dist2)
+rhoPar1(sb_cons, dist1)
+rhoPar2(sb_cons, dist1)
+rhoPar1(sb_cons, dist2)
+rhoPar2(sb_cons, dist2)
+rhoPar1(sb_unif, dist1)
+rhoPar2(sb_unif, dist1)
+rhoPar1(sb_unif, dist2)
+rhoPar2(sb_unif, dist2)
+rhoPar1(sb_triple, dist1)
+rhoPar2(sb_triple, dist1)
+rhoPar1(sb_triple, dist2)
+rhoPar2(sb_triple, dist2)
+rhoPar1(sb_midly, dist1)
+rhoPar2(sb_midly, dist1)
+rhoPar1(sb_midly, dist2)
+rhoPar2(sb_midly, dist2)
+
 val i1_10 = i1(10)
 val i2_10 = i2(10)
 val i1_20 = i1(20)
@@ -82,6 +108,7 @@ val i2_20 = i2(20)
 showWeightedGraph(i1_10)
 showWeightedGraph(i2_10)
 
+//Pruebas secuenciales
 val sbu_10 = uniformBelief(10)
 confBiasUpdate(sbu_10, i1_10)
 rho1(sbu_10, dist1)
@@ -91,6 +118,17 @@ val sbm_10 = midlyBelief(10)
 confBiasUpdate(sbm_10, i1_10)
 rho1(sbm_10, dist1)
 rho1(confBiasUpdate(sbm_10, i1_10), dist1)
+
+//Pruebas Paralelas
+val sbu_10 = uniformBelief(10)
+confBiasUpdatePar(sbu_10, i1_10)
+rho1(sbu_10, dist1)
+rho1(confBiasUpdatePar(sbu_10, i1_10), dist1)
+
+val sbm_10 = midlyBelief(10)
+confBiasUpdatePar(sbm_10, i1_10)
+rho1(sbm_10, dist1)
+rho1(confBiasUpdatePar(sbm_10, i1_10), dist1)
 
 for {
   b <- simulate(confBiasUpdate, i1_10, sbu_10, 2)
