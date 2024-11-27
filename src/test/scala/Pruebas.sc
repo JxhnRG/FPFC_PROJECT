@@ -1,4 +1,6 @@
-
+import Comete._
+import Benchmark._
+import  Opinion._
 
 //Definimos los casos de las frecuencias
 val pi_max = Vector(0.5,0.0,0.0,0.0,0.5)
@@ -113,10 +115,6 @@ val i132768 = i1(32768)
 val i232768 = i2(32768)
 compararFuncionesAct(sbms.take(sbms.length / 2), i232768, confBiasUpdate, confBiasUpdatePar)
 
-val sbms = for {
-  n <-2 until 16
-  nags = math.pow(2,n).toInt
-} yield midlyBelief(nags)
 
 val sbes = for {
   n <-2 until 16
