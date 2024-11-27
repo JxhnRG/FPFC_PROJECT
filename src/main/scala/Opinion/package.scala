@@ -38,35 +38,36 @@ package object Opinion {
 
       val k = distributionValues.length
 
-      val firstInterval = (0.0, distributionValues(1)/2)
-      val middleIntervals = (1 to k-2).map(i =>
-        ((distributionValues(i)+distributionValues(i-1))/2, (distributionValues(i)+distributionValues(i+1))/2)).toVector
-      val lastInterval = ((distributionValues(k-2)+1)/2, 1.0)
+      val firstInterval = (0.0, distributionValues(1) / 2)
+      val middleIntervals = (1 to k - 2).map(i =>
+        ((distributionValues(i) + distributionValues(i - 1)) / 2, (distributionValues(i) + distributionValues(i + 1)) / 2)).toVector
+      val lastInterval = ((distributionValues(k - 2) + 1) / 2, 1.0)
 
       val intervals = firstInterval +: middleIntervals :+ lastInterval
 
       val emptyClassification = (0 until k).map(i => i -> Vector.empty[Double]).toMap
       val classification = specificBelief.groupBy(a => intervals.zipWithIndex.indexWhere {
         case ((start, end), i) =>
-          if(i == k-1) (start <= a && a <= end)
+          if (i == k - 1) (start <= a && a <= end)
           else (start <= a && a < end)
       })
       val finalClassification = (emptyClassification ++ classification).toSeq.sortBy(_._1)
 
       val numAgents = specificBelief.length
-      val frequency = finalClassification.map{ case (i, values) => (values.length.toDouble)/numAgents}.toVector
+      val frequency = finalClassification.map { case (i, values) => (values.length.toDouble) / numAgents }.toVector
 
-      val cmt= rhoCMT_Gen(alpha, beta)
-      val cmtnorm= normalizar(cmt)
+      val cmt = rhoCMT_Gen(alpha, beta)
+      val cmtnorm = normalizar(cmt)
       cmtnorm((frequency, distributionValues))
     }
   }
-  type WeightedGraph = ( Int , Int ) => Double
-  type SpecificWeightedGraph = (WeightedGraph , Int )
+
+  type WeightedGraph = (Int, Int) => Double
+  type SpecificWeightedGraph = (WeightedGraph, Int)
   type GenericWeightedGraph =
     Int => SpecificWeightedGraph
   type FunctionUpdate =
-    ( SpecificBelief , SpecificWeightedGraph )=> SpecificBelief
+    (SpecificBelief, SpecificWeightedGraph) => SpecificBelief
 
 
   def showWeightedGraph(swg: SpecificWeightedGraph): IndexedSeq[IndexedSeq[Double]] = {
@@ -78,27 +79,18 @@ package object Opinion {
 
 
   def confBiasUpdate(sb: SpecificBelief, swg: SpecificWeightedGraph): SpecificBelief = {
-    // Crear una nueva colección para almacenar las creencias actualizadas
-    sb.zipWithIndex.map { case (belief, i) =>
-      // Identificar los agentes influyentes
-      val influentAgents = (0 until swg._2).filter(j => swg._1(j, i) > 0)
+    val k = sb.knownSize
+    val I = swg._1
 
-      // Verificar si hay agentes influyentes
-      if (influentAgents.isEmpty) {
-        // Si no hay agentes influyentes, la creencia permanece igual
-        belief
-      } else {
-        // Calcular la suma ponderada de influencias
-        val sum = influentAgents.map { j =>
-          val beta = 1 - math.abs(sb(j) - belief)
-          val influenceGraph = swg._1(j, i)
-          beta * influenceGraph * (sb(j) - belief)
-        }.sum
-
-        // Actualizar la creencia con el promedio de influencias
-        belief + sum / influentAgents.length
+    def nbFunc(i: Int): Double = {
+      def sum(i: Int): Double = {
+        (0 until k).map(j => (1 - math.abs(sb(j) - sb(i))) * I(j, i) * (sb(j) - sb(i))).sum
       }
+
+      sb(i) + sum(i) / (i + 1)
     }
+
+    (0 until k).map(i => nbFunc(i)).toVector
   }
 
   def simulate(
@@ -109,34 +101,78 @@ package object Opinion {
               ): IndexedSeq[SpecificBelief] = {
     (0 until t).scanLeft(b0)((b, _) => fu(b, swg))
   }
+
   // Versiones paralelas
   def rhoPar(alpha: Double, beta: Double): AgentsPolMeasure = {
     (specificBelief: SpecificBelief, distributionValues: DistributionValues) => {
       val numAgents = specificBelief.length
       val k = distributionValues.length
 
-      val firstInterval = (0.0, distributionValues(1)/2)
-      val middleIntervals = (1 to k-2).par.map(i =>
-        ((distributionValues(i)+distributionValues(i-1))/2, (distributionValues(i)+distributionValues(i+1))/2)).toVector
-      val lastInterval = ((distributionValues(k-2)+1)/2, 1.0)
+      val firstInterval = (0.0, distributionValues(1) / 2)
+      val middleIntervals = (1 to k - 2).par.map(i =>
+        ((distributionValues(i) + distributionValues(i - 1)) / 2, (distributionValues(i) + distributionValues(i + 1)) / 2)).toVector
+      val lastInterval = ((distributionValues(k - 2) + 1) / 2, 1.0)
 
       val intervals = firstInterval +: middleIntervals :+ lastInterval
 
       val emptyClassification = (0 until k).map(i => i -> Vector.empty[Double]).toMap
       val classification = specificBelief.par.groupBy(a => intervals.zipWithIndex.indexWhere {
         case ((start, end), i) =>
-          if(i == k-1) (start <= a && a <= end)
+          if (i == k - 1) (start <= a && a <= end)
           else (start <= a && a < end)
       })
       val finalClassification = (emptyClassification ++ classification).toSeq.sortBy(_._1)
 
-      val frequency = finalClassification.map{ case (i, values) => values.knownSize.toDouble/numAgents}.toVector
+      val frequency = finalClassification.map { case (i, values) => values.knownSize.toDouble / numAgents }.toVector
 
-      val  cmt = rhoCMT_Gen(alpha, beta)
+      val cmt = rhoCMT_Gen(alpha, beta)
       val cmtnorm = normalizar(cmt)
       cmtnorm((frequency, distributionValues))
     }
   }
+  def confBiasUpdatePar(sb: SpecificBelief, swg: SpecificWeightedGraph): SpecificBelief = {
+    /*def umbral(npuntos:Int):Int = {
+      // Si npuntos= 2^n, entonces el umbral será 2^(n/2)
+      math.pow(2, ((math.log(npuntos)/math.log(2))/2).toInt).toInt
+    }*/
 
+    val k = sb.knownSize
+    val I = swg._1
+    //val umb = umbral(k)
 
+    /*def parallelAux(subSb: SpecificBelief): SpecificBelief = {
+      val k = subSb.knownSize
+
+      if(k > umb) {
+        val (left, right) = sb.splitAt(k/2)
+
+        val (res1, res2) = parallel(parallelAux(left), parallelAux(right))
+
+        res1 ++ res2
+      } else {
+        def nbFunc(i: Int): Double = {
+          def sum(i: Int): Double = {
+            (0 until k).par.map(j => (1-math.abs(sb(j)-sb(i))) * I(j,i) * (sb(j)-sb(i))).sum
+          }
+
+          sb(i) + sum(i)/(i+1)
+        }
+
+        (0 until k).par.map(i => nbFunc(i)).toVector
+        confBiasUpdate(subSb, swg)
+      }
+    }
+
+    parallelAux(sb)*/
+
+    def nbFunc(i: Int): Double = {
+      def sum(i: Int): Double = {
+        (0 until k).par.map(j => (1-math.abs(sb(j)-sb(i))) * I(j,i) * (sb(j)-sb(i))).sum
+      }
+
+      sb(i) + sum(i)/(i+1)
+    }
+
+    (0 until k).par.map(i => nbFunc(i)).toVector
+  }
 }

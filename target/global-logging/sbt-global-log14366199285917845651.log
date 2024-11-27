@@ -1,0 +1,21 @@
+[debug] > Exec(console, None, None)
+[debug] Evaluating tasks: Compile / console
+[debug] Running task... Cancel: Signal, check cycles: false, forcegc: true
+[info] compiling 4 Scala sources to C:\Users\jjaid\OneDrive\Desktop\FPFC_PROJECT\target\scala-2.13\classes ...
+[info] downloading https://repo1.maven.org/maven2/org/scala-sbt/compiler-bridge_2.13/1.10.4/compiler-bridge_2.13-1.10.4.pom
+[info] downloaded https://repo1.maven.org/maven2/org/scala-sbt/compiler-bridge_2.13/1.10.4/compiler-bridge_2.13-1.10.4.pom
+[info] downloading https://repo1.maven.org/maven2/org/scala-sbt/util-interface/1.10.4/util-interface-1.10.4.pom
+[info] downloaded https://repo1.maven.org/maven2/org/scala-sbt/util-interface/1.10.4/util-interface-1.10.4.pom
+[info] downloading https://repo1.maven.org/maven2/org/scala-sbt/util-interface/1.10.4/util-interface-1.10.4.jar
+[info] downloading https://repo1.maven.org/maven2/org/scala-sbt/compiler-bridge_2.13/1.10.4/compiler-bridge_2.13-1.10.4-sources.jar
+[info] downloaded https://repo1.maven.org/maven2/org/scala-sbt/util-interface/1.10.4/util-interface-1.10.4.jar
+[info] downloaded https://repo1.maven.org/maven2/org/scala-sbt/compiler-bridge_2.13/1.10.4/compiler-bridge_2.13-1.10.4-sources.jar
+[info] Non-compiled module 'compiler-bridge_2.13' for Scala 2.13.10. Compiling...
+[info]   Compilation completed in 39.051s.
+[error] C:\Users\jjaid\OneDrive\Desktop\FPFC_PROJECT\src\main\scala\Opinion\package.scala:179:1: Unmatched closing brace '}' ignored here
+[error] }
+[error] ^
+[error] one error found
+[error] (Compile / compileIncremental) Compilation failed
+[error] Total time: 43 s, completed 27/11/2024, 1:29:41 p. m.
+[debug] > Exec(idea-shell, None, None)
